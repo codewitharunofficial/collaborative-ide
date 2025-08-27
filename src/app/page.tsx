@@ -7,6 +7,8 @@ export default function Home() {
   const [roomId, setRoomId] = useState("");
   const router = useRouter();
 
+  console.log( process.env.NEXT_APP_PUBLIC_URL)
+
   const handleJoin = () => {
     if (roomId.trim()) {
       router.push(`/editor/${roomId}`);
