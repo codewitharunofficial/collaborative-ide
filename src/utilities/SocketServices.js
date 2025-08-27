@@ -1,6 +1,7 @@
 import { io } from "socket.io-client";
 
-const socket = io(`http://172.26.57.99:1234`);
+
+const socket = io(process.env.NEXT_APP_PUBLIC_URL);
 
 
 class SocketService {
