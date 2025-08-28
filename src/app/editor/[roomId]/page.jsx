@@ -10,10 +10,10 @@ const MonacoEditor = dynamic(() => import("@monaco-editor/react"), { ssr: false 
 
 export default function EditorPageClient() {
     const params = useParams();
-    const roomId = params?.roomId as string;
+    const roomId = params?.roomId;
 
     const [code, setCode] = useState("// Start coding...");
-    const [terminalOutput, setTerminalOutput] = useState<string[]>([]);
+    const [terminalOutput, setTerminalOutput] = useState([]);
 
     // join room & listen for updates
     useEffect(() => {
@@ -36,12 +36,12 @@ export default function EditorPageClient() {
         };
     }, [roomId]);
 
-    const handleEditorChange = (value?: string) => {
+    const handleEditorChange = (value) => {
         setCode(value || "");
         SocketServices.emit("code-change", { roomId, code: value });
     };
 
-    const handleCommand = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const handleCommand = (e) => {
         if (e.key === "Enter" && e.currentTarget.value.trim()) {
             const command = e.currentTarget.value;
             SocketServices.emit("terminal-command", { roomId, command });
