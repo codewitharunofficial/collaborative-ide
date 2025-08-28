@@ -27,12 +27,14 @@ export default function EditorPageClient() {
             setCode(newCode);
         });
 
-        SocketServices.on("terminal-output", (output) => {
-            setTerminalOutput((prev) => [...prev, output]);
+        SocketServices.on("terminal-output", ({ command, output }) => {
+            setTerminalOutput((prev) => [...prev, { command, output }]);
         });
 
         return () => {
             SocketServices.emit("leave-room", { roomId });
+            SocketServices.socket.off("code-update");
+            SocketServices.socket.off("terminal-output");
         };
     }, [roomId]);
 
@@ -45,7 +47,6 @@ export default function EditorPageClient() {
         if (e.key === "Enter" && e.currentTarget.value.trim()) {
             const command = e.currentTarget.value;
             SocketServices.emit("terminal-command", { roomId, command });
-            setTerminalOutput((prev) => [...prev, `> ${command}`]);
             e.currentTarget.value = "";
         }
     };
@@ -54,7 +55,7 @@ export default function EditorPageClient() {
         <div className="flex flex-col min-h-screen bg-[#1e1e1e] text-white">
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-3 bg-[#222] border-b border-gray-700">
-                <span className="font-semibold">Collaborative Editor</span>
+                <span className="font-semibold text-lg">CodeIDE</span>
                 <span className="text-sm text-gray-400">Room: {roomId}</span>
             </div>
 
@@ -77,18 +78,23 @@ export default function EditorPageClient() {
                 </div>
 
                 {/* Terminal */}
-                <div className="w-full lg:w-1/3 bg-black text-green-400 p-3 flex flex-col">
-                    <div className="flex-1 overflow-y-auto font-mono text-sm mb-2">
-                        {terminalOutput.map((line, i) => (
-                            <div key={i}>{line}</div>
+                <div className="w-full lg:w-1/3 bg-black text-green-400 flex flex-col">
+                    <div className="flex-1 overflow-y-auto font-mono text-sm p-3 space-y-1">
+                        {terminalOutput.map((msg, i) => (
+                            <div key={i}>
+                                {msg.command && <div className="text-green-300">➜ {msg.command}</div>}
+                                <div className="whitespace-pre-wrap">{msg.output}</div>
+                            </div>
                         ))}
                     </div>
-                    <input
-                        type="text"
-                        placeholder="Type a command and press Enter..."
-                        onKeyDown={handleCommand}
-                        className="bg-[#111] text-white p-2 rounded outline-none font-mono text-sm"
-                    />
+                    <div className="border-t border-gray-700 p-2">
+                        <input
+                            type="text"
+                            placeholder="Type a command and press Enter..."
+                            onKeyDown={handleCommand}
+                            className="w-full bg-[#111] text-white p-2 rounded outline-none font-mono text-sm"
+                        />
+                    </div>
                 </div>
             </div>
         </div>

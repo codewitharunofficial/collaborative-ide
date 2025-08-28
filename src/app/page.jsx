@@ -44,9 +44,7 @@ export default function Home() {
 
   return (
     <div className="flex flex-col min-h-screen bg-[#121212] text-white">
-      <Navbar />
 
-      {/* Hero Section */}
       <main className="flex flex-1 flex-col items-center justify-center text-center px-4">
         <h1 className="text-4xl md:text-5xl font-extrabold mb-6">
           Collaborative Code Editor
@@ -81,8 +79,6 @@ export default function Home() {
           {loading ? "Creating..." : "Create New Room"}
         </button>
       </main>
-
-      <Footer />
     </div>
   );
 }

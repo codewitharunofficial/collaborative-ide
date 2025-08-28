@@ -1,16 +1,39 @@
 "use client";
 
-import Link from "next/link";
+import { signIn, signOut, useSession } from "next-auth/react";
 
 export default function Navbar() {
+    const { data: session } = useSession();
+
+    console.log(session);
+
     return (
-        <nav className="bg-[#1e1e1e] text-white px-6 py-3 flex items-center justify-between shadow-md">
-            <h1 className="text-lg font-bold">⚡ Collab Code</h1>
-            <div className="space-x-4">
-                <Link href="/" className="hover:text-gray-300">Home</Link>
-                <Link href="/about" className="hover:text-gray-300">About</Link>
-                <Link href="https://github.com/codewitharunofficial/collaborative-ide" target="_blank" className="hover:text-gray-300">GitHub</Link>
-            </div>
+        <nav className="flex items-center justify-between px-6 py-4 bg-[#1e1e1e] shadow-md">
+            <h1 className="text-xl font-bold">⚡ CodeIDE</h1>
+
+            {session ? (
+                <div className="flex items-center gap-3">
+                    <img
+                        src={session.user?.image || ""}
+                        alt="avatar"
+                        className="w-8 h-8 rounded-full"
+                    />
+                    <span>{session.user?.name}</span>
+                    <button
+                        onClick={() => signOut()}
+                        className="px-3 py-1 bg-red-600 hover:bg-red-700 rounded"
+                    >
+                        Logout
+                    </button>
+                </div>
+            ) : (
+                <button
+                    onClick={() => signIn("github")}
+                    className="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded"
+                >
+                    Login with GitHub
+                </button>
+            )}
         </nav>
     );
 }
