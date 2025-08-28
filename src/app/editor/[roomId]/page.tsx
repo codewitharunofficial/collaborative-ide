@@ -1,7 +1,7 @@
 "use client";
 import { useParams, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import SocketService from "@/utilities/SocketServices"; // adjust path
+import SocketService from "@/utilities/SocketServices";
 import CodeEditor from "@/components/CodeEditor";
 
 export default function EditorPage() {
@@ -13,21 +13,33 @@ export default function EditorPage() {
     const [code, setCode] = useState("// Welcome to room " + roomId);
 
     useEffect(() => {
-        // emit correct event depending on creator/joiner
         if (isCreator) {
-            SocketService.emit("create-room", roomId);
+            SocketService.emit("create-room", { roomId }, (res) => {
+                if (!res.success) alert(res.error || "Failed to create room.");
+            });
         } else {
-            SocketService.emit("join-room", roomId);
+            SocketService.emit("join-room", { roomId }, (res) => {
+                if (!res.success) alert(res.error || "Failed to join room.");
+            });
         }
 
-        // listen for updates
-        SocketService.on("code-update", (newCode: string) => {
+        SocketService.on("room-created", (id) => {
+            console.log(`🎉 Room created: ${id}`);
+        });
+
+        SocketService.on("room-joined", (id) => {
+            console.log(`✅ User joined: ${id}`);
+        });
+
+        SocketService.on("code-update", (newCode) => {
             setCode(newCode);
         });
 
         return () => {
-            SocketService.emit("leave-room", roomId);
-            // don’t disconnect the entire socket here
+            SocketService.emit("leave-room", { roomId });
+            SocketService.off("room-created");
+            SocketService.off("room-joined");
+            SocketService.off("code-update");
         };
     }, [roomId, isCreator]);
 

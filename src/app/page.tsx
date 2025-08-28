@@ -4,35 +4,52 @@ import { useRouter } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import SocketServices from "@/utilities/SocketServices";
 
 export default function Home() {
   const [roomId, setRoomId] = useState("");
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const handleJoin = () => {
-    if (roomId.trim()) {
-      router.push(`/editor/${roomId}`);
-    }
+    if (!roomId.trim()) return;
+
+    setLoading(true);
+    SocketServices.emit("join-room", { roomId }, (response) => {
+      setLoading(false);
+
+      if (response.success) {
+        router.push(`/editor/${roomId}`);
+      } else {
+        alert(response.error || "Failed to join room.");
+      }
+    });
   };
 
   const handleCreate = () => {
     const newRoomId = uuidv4();
-    router.push(`/editor/${newRoomId}?create=true`);
+
+    setLoading(true);
+    SocketServices.emit("create-room", { roomId: newRoomId }, (response) => {
+      setLoading(false);
+
+      if (response.success) {
+        router.push(`/editor/${newRoomId}?create=true`);
+      } else {
+        alert(response.error || "Failed to create room.");
+      }
+    });
   };
 
   return (
     <div className="flex flex-col min-h-screen bg-[#121212] text-white">
-      {/* Navbar */}
       <Navbar />
-
-      {/* Hero Section */}
       <main className="flex flex-1 flex-col items-center justify-center text-center px-4">
         <h1 className="text-4xl md:text-5xl font-extrabold mb-6">
           Collaborative Code Editor
         </h1>
         <p className="text-gray-400 max-w-xl mb-8">
           Create or join a room to start coding together in real-time.
-          Share your room ID with friends and build something awesome ✨
         </p>
 
         <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
@@ -45,21 +62,21 @@ export default function Home() {
           />
           <button
             onClick={handleJoin}
-            className="bg-green-600 hover:bg-green-700 px-6 py-3 rounded font-medium transition cursor-pointer"
+            disabled={loading}
+            className="bg-green-600 hover:bg-green-700 px-6 py-3 rounded font-medium transition cursor-pointer disabled:opacity-50"
           >
-            Join Room
+            {loading ? "Joining..." : "Join Room"}
           </button>
         </div>
 
         <button
           onClick={handleCreate}
-          className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded font-medium mt-6 transition cursor-pointer"
+          disabled={loading}
+          className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded font-medium mt-6 transition cursor-pointer disabled:opacity-50"
         >
-          Create New Room
+          {loading ? "Creating..." : "Create New Room"}
         </button>
       </main>
-
-      {/* Footer */}
       <Footer />
     </div>
   );
