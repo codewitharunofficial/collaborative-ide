@@ -1,4 +1,5 @@
 "use client";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
@@ -18,10 +19,10 @@ export default function Home() {
     SocketServices.emit("join-room", { roomId }, (response) => {
       setLoading(false);
 
-      if (response.success) {
+      if (response?.success) {
         router.push(`/editor/${roomId}`);
       } else {
-        alert(response.error || "Failed to join room.");
+        alert(response?.error || "Failed to join room.");
       }
     });
   };
@@ -33,10 +34,10 @@ export default function Home() {
     SocketServices.emit("create-room", { roomId: newRoomId }, (response) => {
       setLoading(false);
 
-      if (response.success) {
+      if (response?.success) {
         router.push(`/editor/${newRoomId}?create=true`);
       } else {
-        alert(response.error || "Failed to create room.");
+        alert(response?.error || "Failed to create room.");
       }
     });
   };
@@ -44,12 +45,15 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-screen bg-[#121212] text-white">
       <Navbar />
+
+      {/* Hero Section */}
       <main className="flex flex-1 flex-col items-center justify-center text-center px-4">
         <h1 className="text-4xl md:text-5xl font-extrabold mb-6">
           Collaborative Code Editor
         </h1>
         <p className="text-gray-400 max-w-xl mb-8">
           Create or join a room to start coding together in real-time.
+          Share your room ID with friends and build something awesome ✨
         </p>
 
         <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
@@ -77,6 +81,7 @@ export default function Home() {
           {loading ? "Creating..." : "Create New Room"}
         </button>
       </main>
+
       <Footer />
     </div>
   );
