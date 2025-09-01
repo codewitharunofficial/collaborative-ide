@@ -16,7 +16,9 @@ export default function Home() {
     if (!roomId.trim()) return;
 
     setLoading(true);
-    SocketServices.emit("join-room", { roomId }, (response) => {
+    SocketServices.emit("join-room", { roomId });
+
+    SocketServices.on('room-joined', (response) => {
       setLoading(false);
 
       if (response?.success) {
@@ -25,13 +27,17 @@ export default function Home() {
         alert(response?.error || "Failed to join room.");
       }
     });
-  };
+  }
 
   const handleCreate = () => {
     const newRoomId = uuidv4();
 
     setLoading(true);
-    SocketServices.emit("create-room", { roomId: newRoomId }, (response) => {
+    SocketServices.emit("create-room", { roomId: newRoomId })
+    setLoading(false);
+
+
+    SocketServices.on('room-created', (response) => {
       setLoading(false);
 
       if (response?.success) {
@@ -40,6 +46,7 @@ export default function Home() {
         alert(response?.error || "Failed to create room.");
       }
     });
+
   };
 
   return (

@@ -32,22 +32,6 @@ export default function CodeEditor({
 
   return (
     <div className="block h-screen w-full relative">
-      {/* Language selector */}
-      <select
-        name="language"
-        id="language"
-        className="border border-gray-600 bg-[#1e1e1e] text-white p-1 rounded fixed right-2 top-2 z-10"
-        value={selectedLang}
-        onChange={(e) => handleLangChange(e.target.value)}
-      >
-        {langs.map((lang) => (
-          <option key={lang.id} value={lang.id}>
-            {lang.name}
-          </option>
-        ))}
-      </select>
-
-      {/* Monaco editor */}
       <Monaco
         height="100vh"
         language={selectedLang}
