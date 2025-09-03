@@ -11,7 +11,7 @@ export default function EditorPageClient() {
 
     const [code, setCode] = useState("// Start coding...");
     const [terminalOutput, setTerminalOutput] = useState([]);
-    const [language, setLanguage] = useState("javascript");
+    const [language, setLanguage] = useState("typescript");
 
     // join room & listen for updates
     useEffect(() => {
@@ -66,27 +66,51 @@ export default function EditorPageClient() {
         }
     };
 
+    // Run JS code directly
+    const handleRunCode = () => {
+        if (language !== "javascript") {
+            setTerminalOutput((prev) => [
+                ...prev,
+                { command: "Run", output: "⚠️ Only JavaScript execution is supported right now." }
+            ]);
+            return;
+        }
+        SocketServices.emit("run-js", { roomId, code });
+        setTerminalOutput((prev) => [
+            ...prev,
+            { command: "node script.js", output: "Running your code..." }
+        ]);
+    };
+
     return (
         <div className="flex flex-col min-h-screen bg-[#1e1e1e] text-white">
 
+            {/* Header */}
             <div className="flex items-center justify-between px-6 py-1 bg-[#222] border-b border-gray-700">
                 <span className="font-semibold text-md">CodeIDE</span>
                 <div className="flex items-center gap-4">
                     <select
                         value={language}
                         onChange={handleLanguageChange}
-                        className="bg-[#111] text-white text-sm px-2 py-1 rounded"
+                        className="bg-[#111] text-white text-sm px-2 py-1 rounded cursor-pointer"
                     >
+                        <option value="typescript">TypeScript</option>
                         <option value="javascript">JavaScript</option>
                         <option value="python">Python</option>
                         <option value="cpp">C++</option>
                         <option value="java">Java</option>
                     </select>
+                    <button
+                        onClick={handleRunCode}
+                        className="bg-green-600 hover:bg-green-700 px-3 py-1 text-sm rounded cursor-pointer"
+                    >
+                        Run Code
+                    </button>
                     <span className="text-sm text-gray-400">Room: {roomId}</span>
                 </div>
             </div>
 
-
+            {/* Editor + Terminal */}
             <div className="flex flex-1 flex-col lg:flex-row">
                 {/* Code Editor */}
                 <CodeEditor

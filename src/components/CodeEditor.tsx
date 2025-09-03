@@ -8,9 +8,11 @@ const Monaco = dynamic(() => import("@monaco-editor/react"), { ssr: false });
 export default function CodeEditor({
   value,
   onChange,
+  language
 }: {
   value: string;
   onChange: (v: string) => void;
+  language: string;
 }) {
   // Track selected language
   const [selectedLang, setSelectedLang] = useState(langs[0].id);
@@ -34,7 +36,8 @@ export default function CodeEditor({
     <div className="block h-screen w-full relative">
       <Monaco
         height="100vh"
-        language={selectedLang}
+        language={language}
+        defaultLanguage="typescript"
         theme="vs-dark"
         value={value}
         onChange={(v) => {
