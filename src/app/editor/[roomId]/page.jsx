@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import SocketServices from "@/utilities/SocketServices";
 import CodeEditor from "@/components/CodeEditor";
+import { FaFileAlt, FaFolder } from "react-icons/fa";
 
 export default function EditorPageClient() {
     const params = useParams();
@@ -14,57 +15,86 @@ export default function EditorPageClient() {
     const [language, setLanguage] = useState("typescript");
 
     // File explorer state
-    const [files, setFiles] = useState([]); // dynamic from server
+    const [projects, setProjects] = useState([]); // all projects from DB
+    const [files, setFiles] = useState([]); // files of current project
     const [activeFile, setActiveFile] = useState(null);
+    const [activeProject, setActiveProject] = useState(null);
 
-    // join room & listen for updates
+    // current user email from localStorage (saved during auth)
+    const userEmail =
+        typeof window !== "undefined" ? JSON.parse(localStorage.getItem("user"))?.email : null;
+
     useEffect(() => {
         if (!roomId) return;
 
         SocketServices.emit("join-room", { roomId });
 
+        // code & lang sync
         SocketServices.on("code-update", (newCode) => setCode(newCode));
         SocketServices.on("language-update", (newLang) => setLanguage(newLang));
 
+        // terminal outputs
         SocketServices.on("terminal-output", ({ command, output }) => {
             setTerminalOutput((prev) => [...prev, { command, output }]);
         });
 
-        // listen for repo files
-        SocketServices.on("repo-cloned", ({ success, files }) => {
-            if (success) setFiles(files);
+        // project loaded (after clone or from DB)
+        SocketServices.on("project-loaded", ({ project, files }) => {
+            setActiveProject(project);
+            setFiles(files);
+            setTerminalOutput((prev) => [
+                ...prev,
+                { command: "project-loaded", output: `✅ Loaded ${project.name}` },
+            ]);
         });
 
-        // listen for opened file
+        // full project list
+        SocketServices.on("projects-list", (projects) => {
+            setProjects(projects);
+            if (projects.length > 0 && !activeProject) {
+                // auto-load the first project
+                const first = projects[0];
+                setActiveProject(first);
+                setFiles(first.files || []);
+            }
+        });
+
+        // opened file
         SocketServices.on("file-opened", ({ filePath, content }) => {
             setActiveFile(filePath);
             setCode(content);
         });
+
+        // fetch projects from DB for this user
+        if (userEmail) {
+            SocketServices.emit("get-projects", { email: userEmail });
+        }
 
         return () => {
             SocketServices.emit("leave-room", { roomId });
             SocketServices.socket.off("code-update");
             SocketServices.socket.off("language-update");
             SocketServices.socket.off("terminal-output");
-            SocketServices.socket.off("repo-cloned");
+            SocketServices.socket.off("project-loaded");
+            SocketServices.socket.off("projects-list");
             SocketServices.socket.off("file-opened");
         };
-    }, [roomId]);
+    }, [roomId, userEmail, activeProject]);
 
-    // Handle editor code change
+    // handle code change
     const handleEditorChange = (value) => {
         setCode(value || "");
         SocketServices.emit("code-change", { roomId, code: value });
     };
 
-    // Handle language change
+    // language change
     const handleLanguageChange = (e) => {
         const newLang = e.target.value;
         setLanguage(newLang);
         SocketServices.emit("language-change", { roomId, language: newLang });
     };
 
-    // Handle terminal commands
+    // terminal commands
     const handleCommand = (e) => {
         if (e.key === "Enter" && e.currentTarget.value.trim()) {
             const command = e.currentTarget.value;
@@ -73,12 +103,15 @@ export default function EditorPageClient() {
         }
     };
 
-    // Run JS code directly
+    // run js code
     const handleRunCode = () => {
         if (language !== "javascript") {
             setTerminalOutput((prev) => [
                 ...prev,
-                { command: "Run", output: "⚠️ Only JavaScript execution is supported right now." },
+                {
+                    command: "Run",
+                    output: "⚠️ Only JavaScript execution is supported right now.",
+                },
             ]);
             return;
         }
@@ -89,19 +122,21 @@ export default function EditorPageClient() {
         ]);
     };
 
-    // Clone repo
+    // clone repo
     const handleCloneRepo = () => {
         const url = prompt("Enter GitHub repo URL:");
-        if (url) {
-            SocketServices.emit("clone-repo", { roomId, repoUrl: url });
+        if (url && userEmail) {
+            SocketServices.emit("clone-repo", { roomId, repoUrl: url, email: userEmail });
             setTerminalOutput((prev) => [
                 ...prev,
                 { command: "git clone", output: `Cloning ${url}...` },
             ]);
+        } else {
+            alert("❌ You must be logged in before cloning a repo.");
         }
     };
 
-    // Open file
+    // open file
     const handleOpenFile = (filePath) => {
         SocketServices.emit("open-file", { roomId, filePath });
     };
@@ -141,26 +176,52 @@ export default function EditorPageClient() {
 
             {/* Main layout */}
             <div className="flex flex-1">
-                {/* Sidebar (File Explorer) */}
+                {/* Sidebar (Projects + File Explorer) */}
                 <div className="w-56 bg-[#252526] border-r border-gray-700 flex flex-col">
                     <div className="flex items-center justify-between px-3 py-2 border-b border-gray-600">
                         <span className="font-medium text-sm">Explorer</span>
                         <div className="flex gap-2 text-gray-300">
-                            <button onClick={handleCloneRepo} className="hover:text-white">🔗</button>
+                            <button onClick={handleCloneRepo} className="hover:text-white">
+                                🔗
+                            </button>
                         </div>
                     </div>
+
                     <div className="flex-1 overflow-y-auto text-sm">
-                        {files.length === 0 ? (
-                            <div className="px-3 py-2 text-gray-500">No files yet</div>
+                        {projects.length === 0 ? (
+                            <div className="px-3 py-2 text-gray-500">No projects yet</div>
                         ) : (
-                            files.map((f, i) => (
-                                <div
-                                    key={i}
-                                    onClick={() => f.type === "file" && handleOpenFile(f.path)}
-                                    className={`px-3 py-1 cursor-pointer hover:bg-[#333] ${activeFile === f.path ? "bg-[#444]" : ""}`}
-                                >
-                                    {f.type === "file" ? "📄 " : "📁 "}
-                                    {f.name}
+                            projects.map((proj) => (
+                                <div key={proj._id}>
+                                    <div
+                                        className={`px-3 py-2 font-semibold cursor-pointer ${activeProject?._id === proj._id ? "bg-[#333]" : "hover:bg-[#2d2d2d]"
+                                            }`}
+                                        onClick={() => {
+                                            setActiveProject(proj);
+                                            setFiles(proj.files || []);
+                                        }}
+                                    >
+                                        📂 {proj.name}
+                                    </div>
+                                    {activeProject?._id === proj._id && (
+                                        <div className="ml-4">
+                                            {files.length === 0 ? (
+                                                <div className="px-3 py-1 text-gray-500">No files yet</div>
+                                            ) : (
+                                                files.map((f, i) => (
+                                                    <div
+                                                        key={i}
+                                                        onClick={() => f.type === "file" && handleOpenFile(f.path)}
+                                                        className={`flex items-center gap-2 px-3 py-1 cursor-pointer hover:bg-[#333] ${activeFile === f.path ? "bg-[#444]" : ""
+                                                            }`}
+                                                    >
+                                                        {f.type === "file" ? <FaFileAlt /> : <FaFolder />}
+                                                        {f.name}
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             ))
                         )}
@@ -176,7 +237,9 @@ export default function EditorPageClient() {
                         <div className="flex-1 overflow-y-auto font-mono text-sm p-3 space-y-1">
                             {terminalOutput.map((msg, i) => (
                                 <div key={i}>
-                                    {msg.command && <div className="text-green-300">➜ {msg.command}</div>}
+                                    {msg.command && (
+                                        <div className="text-green-300">➜ {msg.command}</div>
+                                    )}
                                     <div className="whitespace-pre-wrap">{msg.output}</div>
                                 </div>
                             ))}

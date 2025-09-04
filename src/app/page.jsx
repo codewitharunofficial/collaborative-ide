@@ -30,12 +30,10 @@ export default function Home() {
   }
 
   const handleCreate = () => {
+    setLoading(true);
     const newRoomId = uuidv4();
 
-    setLoading(true);
-    SocketServices.emit("create-room", { roomId: newRoomId })
-    setLoading(false);
-
+    SocketServices.emit("create-room", { roomId: newRoomId });
 
     SocketServices.on('room-created', (response) => {
       setLoading(false);
