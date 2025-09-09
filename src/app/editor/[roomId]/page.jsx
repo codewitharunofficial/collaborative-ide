@@ -103,6 +103,31 @@ export default function EditorPageClient() {
         }
     };
 
+    function setCurrentFileLanguage(filename) {
+        switch (true) {
+            case filename.endsWith(".js"):
+                return "javascript";
+            case filename.endsWith(".ts") || filename.endsWith(".tsx"):
+                return "typescript";
+            case filename.endsWith(".css"):
+                return "css";
+            case filename.endsWith(".html"):
+                return "html";
+            case filename.endsWith(".json"):
+                return "json";
+            case filename.endsWith(".md"):
+                return "markdown";
+            case filename.endsWith(".py"):
+                return "python";
+            case filename.endsWith(".tsx"):
+                return "typescript";
+            case filename.endsWith(".jsx"):
+                return "javascript";
+            default:
+                return "plaintext";
+        }
+    }
+
     // run js code
     const handleRunCode = () => {
         if (language !== "javascript") {
@@ -163,6 +188,7 @@ export default function EditorPageClient() {
                         <option value="python">Python</option>
                         <option value="cpp">C++</option>
                         <option value="java">Java</option>
+                        <option value="json">JSON</option>
                     </select>
                     <button
                         onClick={handleRunCode}
@@ -211,7 +237,7 @@ export default function EditorPageClient() {
                                                 files.map((f, i) => (
                                                     <div
                                                         key={i}
-                                                        onClick={() => f.type === "file" && handleOpenFile(f.path)}
+                                                        onClick={() => f.type === "file" && setCode(f.content) && setActiveFile(f)}
                                                         className={`flex items-center gap-2 px-3 py-1 cursor-pointer hover:bg-[#333] ${activeFile === f.path ? "bg-[#444]" : ""
                                                             }`}
                                                     >
@@ -230,7 +256,7 @@ export default function EditorPageClient() {
 
                 {/* Editor + Terminal */}
                 <div className="flex flex-1 flex-col lg:flex-row">
-                    <CodeEditor value={code} onChange={handleEditorChange} language={language} />
+                    <CodeEditor value={code} onChange={handleEditorChange} language={setCurrentFileLanguage(activeFile?.name || "")} />
 
                     {/* Terminal */}
                     <div className="w-full lg:w-1/3 bg-black text-green-400 flex flex-col">
