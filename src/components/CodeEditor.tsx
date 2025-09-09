@@ -37,7 +37,7 @@ export default function CodeEditor({
       <Monaco
         height="100vh"
         language={language}
-        // defaultLanguage="javascript"
+        defaultLanguage="javascript"
         theme="vs-dark"
         value={value}
         onChange={(v) => {
@@ -50,7 +50,6 @@ export default function CodeEditor({
           minimap: { enabled: true },
           scrollBeyondLastLine: false,
         }}
-        wrapperProps={{ className: "h-full w-full pb-24" }}
       />
     </div>
   );

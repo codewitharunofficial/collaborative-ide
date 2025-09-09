@@ -16,6 +16,7 @@ export default function Navbar() {
     const [savedUser, setSavedUser] = useState<SavedUser | null>(null);
     const router = useRouter();
 
+    console.log(session);
     useEffect(() => {
         const data = localStorage.getItem("user");
         if (data) {
@@ -24,26 +25,17 @@ export default function Navbar() {
     }, []);
 
     useEffect(() => {
-        if (savedUser?.email !== null) {
+        if (savedUser?.email) {
             SocketServices.emit('user-auth', { user: session?.user, expiresAt: session?.expires });
-        } else if (session?.user?.email !== null) {
+        } else if (session?.user?.email && session?.user?.email !== null) {
+            localStorage.setItem("user", JSON.stringify(session?.user));
             SocketServices.emit('user-auth', { user: savedUser, expiresAt: session?.expires });
-        } else if (session.user.email === null) {
+        } else if (session?.user?.email === null || !session?.user?.email) {
             router.push("add-email");
         } else {
             console.log("Do Nothing");
         }
     }, [savedUser, session]);
-
-    useEffect(() => {
-        if (session?.user?.email !== null) {
-            SocketServices.emit('user-auth', { user: session?.user, expiresAt: session?.expires });
-        } else if (savedUser?.email !== null) {
-            SocketServices.emit('user-auth', { user: savedUser, expiresAt: session?.expires });
-        } else {
-            router.push("add-email");
-        }
-    }, [session]);
 
     return (
         <nav className="flex items-center justify-between px-6 py-4 bg-[#1e1e1e] shadow-md">
@@ -59,8 +51,8 @@ export default function Navbar() {
                     <span>{session.user?.name}</span>
                     <button
                         onClick={() => {
-                            setSavedUser(null);
                             signOut();
+                            localStorage.removeItem("user");
                         }}
                         className="px-3 py-1 bg-red-600 hover:bg-red-700 rounded cursor-pointer"
                     >

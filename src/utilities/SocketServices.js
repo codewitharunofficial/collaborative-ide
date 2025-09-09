@@ -21,6 +21,10 @@ class SocketService {
     this.socket.emit(event, data, callback);
   }
 
+  off(event){
+    this.socket.off(event)
+  }
+
   disconnect() {
     this.socket.disconnect();
   }
