@@ -14,9 +14,9 @@ interface SavedUser {
 export default function Navbar() {
     const { data: session } = useSession();
     const [savedUser, setSavedUser] = useState<SavedUser | null>(null);
+    const [isLoggingIn, setIsLoggingIn] = useState(false);
     const router = useRouter();
 
-    console.log(session);
     useEffect(() => {
         const data = localStorage.getItem("user");
         if (data) {
@@ -30,7 +30,7 @@ export default function Navbar() {
         } else if (session?.user?.email && session?.user?.email !== null) {
             localStorage.setItem("user", JSON.stringify(session?.user));
             SocketServices.emit('user-auth', { user: savedUser, expiresAt: session?.expires });
-        } else if (session?.user?.email === null || !session?.user?.email) {
+        } else if (session !== null && (session?.user?.email === null || !session?.user?.email) && isLoggingIn) {
             router.push("add-email");
         } else {
             console.log("Do Nothing");
@@ -61,7 +61,7 @@ export default function Navbar() {
                 </div>
             ) : (
                 <button
-                    onClick={() => signIn("github")}
+                    onClick={() => { signIn("github"); setIsLoggingIn(true); }}
                     className="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded cursor-pointer"
                 >
                     Login with GitHub

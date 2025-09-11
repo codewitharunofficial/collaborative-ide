@@ -182,6 +182,7 @@ export default function EditorPageClient() {
                         value={language}
                         onChange={handleLanguageChange}
                         className="bg-[#111] text-white text-sm px-2 py-1 rounded cursor-pointer"
+                        placeholder="Select Language"
                     >
                         <option value="typescript">TypeScript</option>
                         <option value="javascript">JavaScript</option>

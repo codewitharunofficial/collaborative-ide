@@ -37,7 +37,7 @@ export default function CodeEditor({
       <Monaco
         height="100vh"
         language={language}
-        defaultLanguage="javascript"
+        defaultLanguage="typescript"
         theme="vs-dark"
         value={value}
         onChange={(v) => {
