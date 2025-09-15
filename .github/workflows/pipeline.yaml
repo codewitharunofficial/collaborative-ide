@@ -24,4 +24,4 @@ jobs:
         run: npm run build
 
       - name: Run Tests
-        run: npm test # change to your actual test script
+        run: npm start # change to your actual test script
