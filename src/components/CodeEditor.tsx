@@ -37,7 +37,7 @@ export default function CodeEditor({
       <Monaco
         height="100vh"
         language={language}
-        defaultLanguage="typescript"
+        defaultLanguage="javascript"
         theme="vs-dark"
         value={value}
         onChange={(v) => {
@@ -49,6 +49,7 @@ export default function CodeEditor({
           fontSize: 14,
           minimap: { enabled: true },
           scrollBeyondLastLine: false,
+          padding: { bottom: 100 },
         }}
       />
     </div>

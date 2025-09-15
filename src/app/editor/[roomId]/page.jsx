@@ -162,8 +162,15 @@ export default function EditorPageClient() {
     };
 
     // open file
-    const handleOpenFile = (filePath) => {
-        SocketServices.emit("open-file", { roomId, filePath });
+    const handleOpenFile = (f) => {
+        if (f.type === "file") {
+            setActiveFile(f);
+            setCode(f.content || "");
+            setLanguage(setCurrentFileLanguage(f.name || ""));
+            return;
+        } else {
+            return;
+        }
     };
 
     return (
@@ -238,7 +245,7 @@ export default function EditorPageClient() {
                                                 files.map((f, i) => (
                                                     <div
                                                         key={i}
-                                                        onClick={() => f.type === "file" && setCode(f.content) && setActiveFile(f)}
+                                                        onClick={() => { handleOpenFile(f); }}
                                                         className={`flex items-center gap-2 px-3 py-1 cursor-pointer hover:bg-[#333] ${activeFile === f.path ? "bg-[#444]" : ""
                                                             }`}
                                                     >
