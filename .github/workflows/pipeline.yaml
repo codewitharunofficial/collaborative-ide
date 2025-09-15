@@ -1,20 +1,27 @@
-name: "Build NextJs App"
+name: Build NextJs App
+
 on:
   push:
     branches: [main]
-  jobs:
-    deploy:
-      runs-on: ubuntu-latest
-      steps:
-        - name: "Checkout"
-          uses: "actions/checkout@v3"
-        - name: "NextJs Build"
-          uses: "amondsky/nextjs-action@v1"
-          with:
-          args: "npm run build"
-        - name: "Install Dependencies"
-          run: "npm install"
-        - name: "Build"
-          run: "npm run build"
-        - name: "Run Tests"
-          run: "npm run start"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18 # or whatever version your app needs
+          cache: "npm"
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Build Next.js App
+        run: npm run build
+
+      - name: Run Tests
+        run: npm test # change to your actual test script
