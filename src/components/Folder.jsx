@@ -16,7 +16,7 @@ const Folder = ({ f, i, activeFolder, activeFile, handleOpenFile }) => {
                 {f.name}
             </div>
             {
-                activeFolder && f.children && f.children.map((child, index) => (
+                activeFolder && activeFolder.children.map((child, index) => (
                     child.type === "file" ? (
                         <File key={child.path} f={child} i={index} activeFile={activeFile} handleOpenFile={handleOpenFile} />
                     ) : (
