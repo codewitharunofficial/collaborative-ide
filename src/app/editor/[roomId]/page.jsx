@@ -5,6 +5,8 @@ import { useParams } from "next/navigation";
 import SocketServices from "@/utilities/SocketServices";
 import CodeEditor from "@/components/CodeEditor";
 import { FaFileAlt, FaFolder } from "react-icons/fa";
+import File from "@/components/File";
+import Folder from "@/components/Folder";
 
 export default function EditorPageClient() {
     const params = useParams();
@@ -18,6 +20,7 @@ export default function EditorPageClient() {
     const [projects, setProjects] = useState([]); // all projects from DB
     const [files, setFiles] = useState([]); // files of current project
     const [activeFile, setActiveFile] = useState(null);
+    const [activeFolder, setActiveFolder] = useState(null);
     const [activeProject, setActiveProject] = useState(null);
 
     // current user email from localStorage (saved during auth)
@@ -169,6 +172,9 @@ export default function EditorPageClient() {
             setLanguage(setCurrentFileLanguage(f.name || ""));
             return;
         } else {
+            console.log(f);
+            setActiveFolder(f);
+            setActiveFile(null);
             return;
         }
     };
@@ -177,7 +183,7 @@ export default function EditorPageClient() {
         <div className="flex flex-col min-h-screen bg-[#1e1e1e] text-white">
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-1 bg-[#222] border-b border-gray-700">
-                <span className="font-semibold text-md">CodeIDE</span>
+                <span className="font-semibold text-md">{activeFile?.path || activeFolder?.path || "Untitled"}</span>
                 <div className="flex items-center gap-4">
                     <button
                         onClick={handleCloneRepo}
@@ -243,15 +249,11 @@ export default function EditorPageClient() {
                                                 <div className="px-3 py-1 text-gray-500">No files yet</div>
                                             ) : (
                                                 files.map((f, i) => (
-                                                    <div
-                                                        key={i}
-                                                        onClick={() => { handleOpenFile(f); }}
-                                                        className={`flex items-center gap-2 px-3 py-1 cursor-pointer hover:bg-[#333] ${activeFile === f.path ? "bg-[#444]" : ""
-                                                            }`}
-                                                    >
-                                                        {f.type === "file" ? <FaFileAlt /> : <FaFolder />}
-                                                        {f.name}
-                                                    </div>
+                                                    f.type === "file" ? (
+                                                        <File key={f.path} f={f} i={i} activeFile={activeFile} handleOpenFile={handleOpenFile} />
+                                                    ) : (
+                                                        <Folder key={f.path} f={f} i={i} activeFile={activeFile} activeFolder={activeFolder} handleOpenFile={handleOpenFile} />
+                                                    )
                                                 ))
                                             )}
                                         </div>
